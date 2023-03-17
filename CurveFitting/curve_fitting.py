@@ -68,11 +68,13 @@ def get_fitting_model(id: int):
 
 
 def view_fitting_curve(x, y, fitting_model, popt):
-    if len(sys.argv) < 4 or sys.argv[3] != 1:
+    if len(sys.argv) < 4 or sys.argv[3] != "1":
         return
     plt.scatter(x, y, label="Raw")
-    fit_y = [fitting_model(x_i, popt[0], popt[1]) for x_i in x]
-    plt.plot(x, fit_y, label="Fitting")
+    x_new = np.linspace(0, max(x), 100)
+    fit_y = [fitting_model(x_i, popt[0], popt[1])
+             for x_i in np.linspace(0, max(x), 100)]
+    plt.plot(x_new, fit_y, "--", label="Fitting")
     plt.legend()
     plt.title(f"Proportional Constant = {popt[0]}")
     plt.show()
@@ -90,7 +92,8 @@ def main():
     print(f"covariance: {pcov}")
     view_fitting_curve(x, y, fitting_func, popt)
 
-#comanndline parameters <target file> <fitting model>
+
+# comanndline parameters <target file> <fitting model> <view model>
 if __name__ == "__main__":
     main()
     sys.exit(err.ErrorCode.Success)
