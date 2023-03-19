@@ -5,7 +5,8 @@ from scipy import optimize
 import matplotlib.pyplot as plt
 import csv
 import error_code as err
-
+import math
+import fitting_model as fit
 
 def check_file_provided():
     default_path = "./test.exe"
@@ -44,36 +45,54 @@ def read_model_data(model_file: str):
 def get_fitting_model_id():
     if len(sys.argv) < 3:
         sys.exit(err.ErrorCode.MissingParameter)
-    id = int(sys.argv[2])
-    if id == 1:
-        print("linear")
-    elif id == 2:
-        print("square")
-    else:
+    id= fit.FittingModel.Linear
+    try:
+        id = fit.FittingModel.value_of(sys.argv[2])
+    
+    except ValueError:
         sys.exit(err.ErrorCode.InvalidArgs)
+
+    print(id.value)
     return id
 
 
 linear = lambda x, a, b: a * x + b
-square = lambda x, a, b: a * x**2 + b
+quadratic=lambda x,a,b,c:a*x**2+b*x+c
+square = lambda x, a, b: quadratic(x,a,0,b)
+sinusoidal=lambda x,a,q,b: a*math.sin(x-q)+b
 
-
-def get_fitting_model(id: int):
-    if id == 1:
+def get_fitting_model(id: fit.FittingModel):
+    if id == fit.FittingModel.Linear:
         return linear
-    elif id == 2:
+    elif id == fit.FittingModel.Square:
         return square
+    elif id== fit.FittingModel.Quadratic:
+        return quadratic
+    elif id == fit.FittingModel.Sinusoidal:
+        return sinusoidal
+    else:
+        sys.exit(err.ErrorCode.InvalidArgs)
+
+def get_fitting_func(id: fit.FittingModel,popt):
+    func=get_fitting_model(id)
+    if id == fit.FittingModel.Linear:
+        return lambda x: func(x,popt[0],popt[1])
+    elif id == fit.FittingModel.Square:
+        return lambda x: func(x,popt[0],popt[1])
+    elif id== fit.FittingModel.Quadratic:
+        return lambda x: func(x,popt[0],popt[1],popt[2])
+    elif id==fit.FittingModel.Sinusoidal:
+        return lambda x: func(x,popt[0],popt[1],popt[2])
     else:
         sys.exit(err.ErrorCode.InvalidArgs)
 
 
-def view_fitting_curve(x, y, fitting_model, popt):
+def view_fitting_curve(x, y, id: fit.FittingModel, popt):
     if len(sys.argv) < 4 or sys.argv[3] != "1":
         return
     plt.scatter(x, y, label="Raw")
     x_new = np.linspace(0, max(x), 100)
-    fit_y = [fitting_model(x_i, popt[0], popt[1])
-             for x_i in np.linspace(0, max(x), 100)]
+    fit_y = [get_fitting_func(id,popt)(x_i) for x_i in x_new]
     plt.plot(x_new, fit_y, "--", label="Fitting")
     plt.legend()
     plt.title(f"Proportional Constant = {popt[0]}")
@@ -90,7 +109,7 @@ def main():
     popt, pcov = optimize.curve_fit(fitting_func, x, y)
     print(f"params: {popt}")
     print(f"covariance: {pcov}")
-    view_fitting_curve(x, y, fitting_func, popt)
+    view_fitting_curve(x, y, id, popt)
 
 
 # comanndline parameters <target file> <fitting model> <view model>
