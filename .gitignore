@@ -3,3 +3,11 @@
 *.csv
 *.txt
 *.pyc
+*.toc
+*.zip
+*.manifest
+*.pkg
+*.pyz
+*.html
+*.spec
+*.exe

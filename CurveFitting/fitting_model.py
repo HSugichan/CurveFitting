@@ -5,7 +5,7 @@ class FittingModel(Enum):
     Linear = "linear"
     Square = "square"
     Quadratic = "quadratic"
-    Sinusoidal = "sinusoidal"
+    # Sinusoidal = "sinusoidal"
 
     @classmethod
     def value_of(cls, target_value:str):
