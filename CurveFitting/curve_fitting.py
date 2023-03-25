@@ -56,8 +56,8 @@ def get_fitting_model_id():
 
 
 linear = lambda x, a, b: a * x + b
-quadratic = lambda x, a, b, c: a * x**2 + b * x + c
-square = lambda x, a, b: quadratic(x, a, 0, b)
+parabolic = lambda x, a, b, c: a * x**2 + b * x + c
+square = lambda x, a, b: parabolic(x, a, 0, b)
 # sinusoidal = lambda x, a, q, b: a * np.sin(x - q) + b
 
 
@@ -66,8 +66,8 @@ def get_fitting_model(id: fit.FittingModel):
         return linear
     elif id == fit.FittingModel.Square:
         return square
-    elif id == fit.FittingModel.Quadratic:
-        return quadratic
+    elif id == fit.FittingModel.Parabolic:
+        return parabolic
     # elif id == fit.FittingModel.Sinusoidal:
     #     return sinusoidal
     else:
@@ -80,7 +80,7 @@ def get_fitting_func(id: fit.FittingModel, popt):
         return lambda x: func(x, popt[0], popt[1])
     elif id == fit.FittingModel.Square:
         return lambda x: func(x, popt[0], popt[1])
-    elif id == fit.FittingModel.Quadratic:
+    elif id == fit.FittingModel.Parabolic:
         return lambda x: func(x, popt[0], popt[1], popt[2])
     # elif id == fit.FittingModel.Sinusoidal:
     #     return lambda x: func(x, popt[0], popt[1], popt[2])
@@ -91,12 +91,19 @@ def get_fitting_func(id: fit.FittingModel, popt):
 def view_fitting_curve(x, y, id: fit.FittingModel, popt):
     if len(sys.argv) < 4 or sys.argv[3] != "1":
         return
-    plt.scatter(x, y, label="Raw")
     x_new = np.linspace(0, max(x), 100)
-    fit_y = [get_fitting_func(id, popt)(x_i) for x_i in x_new]
+    f=get_fitting_func(id, popt)
+    fit_y = [f(x_i) for x_i in x_new]
+
+    residuals =  y -[f(x_i) for x_i in x]
+    rss = np.sum(residuals**2)#residual sum of squares = rss
+    tss = np.sum((y-np.mean(y))**2)#total sum of squares = tss
+    r_squared = 1 - (rss / tss)
+
+    plt.scatter(x, y, label="Raw")
     plt.plot(x_new, fit_y, "--", label="Fitting")
     plt.legend()
-    plt.title(f"Proportional Constant = {popt[0]}")
+    plt.title(f"func = {id.get_equation_name()}\nR2 = {r_squared}")
     plt.show()
     plt.close()
     return
@@ -104,13 +111,12 @@ def view_fitting_curve(x, y, id: fit.FittingModel, popt):
 
 def get_dest_file():
     if len(sys.argv) < 5:
-        # sys.exit(err.ErrorCode.MissingParameter)
-        return "test.csv"
+        sys.exit(err.ErrorCode.MissingParameter)
     return sys.argv[4]
 
 
 def write_csv(dest: str, popt):
-    with open(dest, "w", encoding="utf-8", newline="") as f:  # 　’w’＝書き込み
+    with open(dest, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(
             [f"param{int(i)}" for i in np.linspace(0, len(popt) - 1, len(popt))]

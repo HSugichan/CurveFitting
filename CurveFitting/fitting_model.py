@@ -4,7 +4,7 @@ from enum import Enum
 class FittingModel(Enum):
     Linear = "linear"
     Square = "square"
-    Quadratic = "quadratic"
+    Parabolic = "quadratic"
     # Sinusoidal = "sinusoidal"
 
     @classmethod
@@ -13,3 +13,14 @@ class FittingModel(Enum):
             if e.value == target_value:
                 return e
         raise ValueError(f'{target_value} is INVALID')
+    
+    def get_equation_name(cls):
+        if cls.value == FittingModel.Linear:
+            return "ax + b"
+        elif cls.value== FittingModel.Parabolic:
+            return "ax^2 + bx + c"
+        elif cls.Square== FittingModel.Square:
+            return "ax^2 + b"
+        else:
+            raise ValueError(f'{cls.value} is INVALID')
+            
