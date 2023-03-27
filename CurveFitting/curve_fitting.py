@@ -88,22 +88,33 @@ def get_fitting_func(id: fit.FittingModel, popt):
         sys.exit(err.ErrorCode.InvalidArgs)
 
 
+def get_equation_name(id: fit.FittingModel):
+    if id == fit.FittingModel.Linear:
+        return "ax + b"
+    elif id == fit.FittingModel.Parabolic:
+        return "ax^2 + bx + c"
+    elif id == fit.FittingModel.Square:
+        return "ax^2 + b"
+    else:
+        raise ValueError(f"{id.value} is INVALID")
+
+
 def view_fitting_curve(x, y, id: fit.FittingModel, popt):
     if len(sys.argv) < 4 or sys.argv[3] != "1":
         return
     x_new = np.linspace(0, max(x), 100)
-    f=get_fitting_func(id, popt)
+    f = get_fitting_func(id, popt)
     fit_y = [f(x_i) for x_i in x_new]
 
-    residuals =  y -[f(x_i) for x_i in x]
-    rss = np.sum(residuals**2)#residual sum of squares = rss
-    tss = np.sum((y-np.mean(y))**2)#total sum of squares = tss
+    residuals = np.array(y) - f(np.array(x))  # [f( x_i) for x_i in x]
+    rss = np.sum(residuals**2)  # residual sum of squares = rss
+    tss = np.sum((y - np.mean(y)) ** 2)  # total sum of squares = tss
     r_squared = 1 - (rss / tss)
 
     plt.scatter(x, y, label="Raw")
     plt.plot(x_new, fit_y, "--", label="Fitting")
     plt.legend()
-    plt.title(f"func = {id.get_equation_name()}\nR2 = {r_squared}")
+    plt.title(f"func = {get_equation_name(id)}\nR2 = {r_squared:.4f}")
     plt.show()
     plt.close()
     return
@@ -111,6 +122,7 @@ def view_fitting_curve(x, y, id: fit.FittingModel, popt):
 
 def get_dest_file():
     if len(sys.argv) < 5:
+        print("Not identified destination.")
         sys.exit(err.ErrorCode.MissingParameter)
     return sys.argv[4]
 
