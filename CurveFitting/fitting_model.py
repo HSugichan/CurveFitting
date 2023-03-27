@@ -4,7 +4,7 @@ from enum import Enum
 class FittingModel(Enum):
     Linear = "linear"
     Square = "square"
-    Parabolic = "quadratic"
+    Parabolic = "parabolic"
     # Sinusoidal = "sinusoidal"
 
     @classmethod

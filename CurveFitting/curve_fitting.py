@@ -88,13 +88,13 @@ def get_fitting_func(id: fit.FittingModel, popt):
         sys.exit(err.ErrorCode.InvalidArgs)
 
 
-def get_equation_name(id: fit.FittingModel):
+def get_equation_name(id: fit.FittingModel, popt):
     if id == fit.FittingModel.Linear:
-        return "ax + b"
+        return f"{popt[0]:+.3e}x {popt[1]:+.3e}"
     elif id == fit.FittingModel.Parabolic:
-        return "ax^2 + bx + c"
+        return f"{popt[0]:+.3e}x^2 {popt[1]:+.3e}x {popt[2]:+.3e}"
     elif id == fit.FittingModel.Square:
-        return "ax^2 + b"
+        return f"{popt[0]:+.3e}x^2 {popt[1]:+.3e}b"
     else:
         raise ValueError(f"{id.value} is INVALID")
 
@@ -102,11 +102,12 @@ def get_equation_name(id: fit.FittingModel):
 def view_fitting_curve(x, y, id: fit.FittingModel, popt):
     if len(sys.argv) < 4 or sys.argv[3] != "1":
         return
-    x_new = np.linspace(0, max(x), 100)
     f = get_fitting_func(id, popt)
-    fit_y = [f(x_i) for x_i in x_new]
 
-    residuals = np.array(y) - f(np.array(x))  # [f( x_i) for x_i in x]
+    x_new = np.linspace(0, max(x), 100)
+    fit_y = f(x_new)
+
+    residuals = np.array(y) - f(np.array(x))
     rss = np.sum(residuals**2)  # residual sum of squares = rss
     tss = np.sum((y - np.mean(y)) ** 2)  # total sum of squares = tss
     r_squared = 1 - (rss / tss)
@@ -114,7 +115,7 @@ def view_fitting_curve(x, y, id: fit.FittingModel, popt):
     plt.scatter(x, y, label="Raw")
     plt.plot(x_new, fit_y, "--", label="Fitting")
     plt.legend()
-    plt.title(f"func = {get_equation_name(id)}\nR2 = {r_squared:.4f}")
+    plt.title(f"func = {get_equation_name(id,popt)}\nR^2 = {r_squared:.4f}")
     plt.show()
     plt.close()
     return
