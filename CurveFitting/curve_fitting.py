@@ -175,5 +175,6 @@ if __name__ == "__main__":
     try:
         main()
         sys.exit(err.ErrorCode.Success)
-    except:
+    except Exception as e:
+        logger.critical(e)
         sys.exit(err.ErrorCode.Unexpected)
