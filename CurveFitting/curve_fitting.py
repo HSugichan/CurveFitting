@@ -101,21 +101,11 @@ def get_equation_name(id: fit.FittingModel, popt):
         raise ValueError(f"{id.value} is INVALID")
 
 
-def view_fitting_curve(out_path, x, y, id: fit.FittingModel, popt):
-    f = get_fitting_func(id, popt)
-
-    x_new = np.linspace(0, max(x), 100)
-    fit_y = f(x_new)
-
-    residuals = np.array(y) - f(np.array(x))
-    rss = np.sum(residuals**2)  # residual sum of squares = rss
-    tss = np.sum((y - np.mean(y)) ** 2)  # total sum of squares = tss
-    r_squared = 1 - (rss / tss)
-    logger.info(f"R^2={r_squared}")
+def view_fitting_curve(out_path, x, y, fit_x, fit_y, r_squared, func_name):
     plt.scatter(x, y, label="Raw")
-    plt.plot(x_new, fit_y, "--", label="Fitting")
+    plt.plot(fit_x, fit_y, "--", label="Fitting")
     plt.legend()
-    plt.title(f"func = {get_equation_name(id,popt)}\nR^2 = {r_squared:.4f}")
+    plt.title(f"func = {func_name}\nR^2 = {r_squared:.4f}")
     plt.savefig(
         out_path, dpi=300, orientation="portrait", transparent=False, pad_inches=0.0
     )
@@ -124,6 +114,21 @@ def view_fitting_curve(out_path, x, y, id: fit.FittingModel, popt):
 
     plt.close()
     return
+
+
+MIN_R2 = 0.95
+
+
+def calc_r2(x, y, fit_y):
+    residuals = np.array(y) - np.array(fit_y)
+    rss = np.sum(residuals**2)  # residual sum of squares = rss
+    tss = np.sum((y - np.mean(y)) ** 2)  # total sum of squares = tss
+    r_squared = 1 - (rss / tss)
+    logger.info(f"R^2={r_squared}")
+    if r_squared < MIN_R2:
+        logger.error(f"The residuals are TOO large.(R2 < {MIN_R2})")
+        sys.exit(err.ErrorCode.LargeResidual)
+    return r_squared
 
 
 def get_dest_file():
@@ -167,7 +172,16 @@ def main():
     logger.info(f"params: {popt}")
     logger.info(f"covariance: {pcov}")
     write_csv(get_dest_file(), popt)
-    view_fitting_curve(f"{folderpath}/{filename_without_ext}_fit.png", x, y, id, popt)
+
+    f = get_fitting_func(id, popt)
+
+    fit_x = np.linspace(0, max(x), 100)
+    fit_y = f(fit_x)
+    f_name = get_equation_name(id, popt)
+    r2 = calc_r2(x, y, f(np.array(x)))
+    view_fitting_curve(
+        f"{folderpath}/{filename_without_ext}_fit.png", x, y, fit_x, fit_y, r2, f_name
+    )
 
 
 # comanndline parameters <target file> <fitting model> <result viewer ON/OFF> <dest file>

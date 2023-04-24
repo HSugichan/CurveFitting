@@ -7,4 +7,5 @@ class ErrorCode(IntEnum):
     MissingParameter = auto()
     NoContents = auto()
     UnfoundFile = auto()
+    LargeResidual = auto()
     Unexpected = 999
