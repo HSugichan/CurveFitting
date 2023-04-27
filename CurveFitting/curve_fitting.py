@@ -125,9 +125,6 @@ def calc_r2(x, y, fit_y):
     tss = np.sum((y - np.mean(y)) ** 2)  # total sum of squares = tss
     r_squared = 1 - (rss / tss)
     logger.info(f"R^2={r_squared}")
-    if r_squared < MIN_R2:
-        logger.error(f"The residuals are TOO large.(R2 < {MIN_R2})")
-        sys.exit(err.ErrorCode.LargeResidual)
     return r_squared
 
 
@@ -182,6 +179,9 @@ def main():
     view_fitting_curve(
         f"{folderpath}/{filename_without_ext}_fit.png", x, y, fit_x, fit_y, r2, f_name
     )
+    if r2 < MIN_R2:
+        logger.error(f"The residuals are TOO large.(R2 < {MIN_R2})")
+        sys.exit(err.ErrorCode.LargeResidual)
 
 
 # comanndline parameters <target file> <fitting model> <result viewer ON/OFF> <dest file>
