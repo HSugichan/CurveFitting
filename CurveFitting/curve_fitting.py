@@ -177,7 +177,7 @@ def main():
     f_name = get_equation_name(id, popt)
     r2 = calc_r2(x, y, f(np.array(x)))
     view_fitting_curve(
-        f"{folderpath}/{filename_without_ext}_fit.png", x, y, fit_x, fit_y, r2, f_name
+        f"{folderpath}/{filename_without_ext}_fit.jpg", x, y, fit_x, fit_y, r2, f_name
     )
     if r2 < MIN_R2:
         logger.error(f"The residuals are TOO large.(R2 < {MIN_R2})")
