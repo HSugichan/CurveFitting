@@ -106,6 +106,10 @@ def view_fitting_curve(out_path, x, y, fit_x, fit_y, r_squared, func_name):
     plt.plot(fit_x, fit_y, "--", label="Fitting")
     plt.legend()
     plt.title(f"func = {func_name}\nR^2 = {r_squared:.4f}")
+
+    if os.path.exists(out_path):
+        os.remove(out_path)
+        
     plt.savefig(
         out_path, dpi=300, orientation="portrait", transparent=False, pad_inches=0.0
     )
