@@ -60,7 +60,7 @@ def get_fitting_model_id():
 linear = lambda x, a, b: a * x + b
 parabolic = lambda x, a, b, c: a * x**2 + b * x + c
 square = lambda x, a, b: parabolic(x, a, 0, b)
-# sinusoidal = lambda x, a, q, b: a * np.sin(x - q) + b
+sin = lambda x, a, q, b: a * np.sin(x - q) + b
 
 
 def get_fitting_model(id: fit.FittingModel):
@@ -70,8 +70,8 @@ def get_fitting_model(id: fit.FittingModel):
         return square
     elif id == fit.FittingModel.Parabolic:
         return parabolic
-    # elif id == fit.FittingModel.Sinusoidal:
-    #     return sinusoidal
+    elif id == fit.FittingModel.Sin:
+        return sin
     else:
         sys.exit(err.ErrorCode.InvalidArgs)
 
@@ -109,7 +109,7 @@ def view_fitting_curve(out_path, x, y, fit_x, fit_y, r_squared, func_name):
 
     if os.path.exists(out_path):
         os.remove(out_path)
-        
+
     plt.savefig(
         out_path, dpi=300, orientation="portrait", transparent=False, pad_inches=0.0
     )
@@ -123,13 +123,15 @@ def view_fitting_curve(out_path, x, y, fit_x, fit_y, r_squared, func_name):
 MIN_R2 = 0.95
 
 
-def calc_r2(x, y, fit_y):
+def calc_fitting_accuracy(x, y, fit_y):
     residuals = np.array(y) - np.array(fit_y)
     rss = np.sum(residuals**2)  # residual sum of squares = rss
     tss = np.sum((y - np.mean(y)) ** 2)  # total sum of squares = tss
     r_squared = 1 - (rss / tss)
+
+    rms = np.sqrt(rss / len(residuals))
     logger.info(f"R^2={r_squared}")
-    return r_squared
+    return r_squared, rms
 
 
 def get_dest_file():
@@ -139,13 +141,13 @@ def get_dest_file():
     return sys.argv[4]
 
 
-def write_csv(dest: str, popt):
+def write_csv(dest: str, popt, rms):
     with open(dest, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(
-            [f"param{int(i)}" for i in np.linspace(0, len(popt) - 1, len(popt))]
-        )
-        writer.writerow(popt)
+        header = [f"param{int(i)}" for i in np.linspace(0, len(popt) - 1, len(popt))]
+        header.append("rms")
+        writer.writerow(header)
+        writer.writerow(np.append(popt, rms))
 
 
 def setup_logger(dest_filename: str):
@@ -172,14 +174,17 @@ def main():
     popt, pcov = optimize.curve_fit(fitting_func, x, y)
     logger.info(f"params: {popt}")
     logger.info(f"covariance: {pcov}")
-    write_csv(get_dest_file(), popt)
 
     f = get_fitting_func(id, popt)
 
     fit_x = np.linspace(0, max(x), 100)
     fit_y = f(fit_x)
     f_name = get_equation_name(id, popt)
-    r2 = calc_r2(x, y, f(np.array(x)))
+    r2, rms = calc_fitting_accuracy(x, y, f(np.array(x)))
+    logger.info(f"RMS: {rms}")
+
+    write_csv(get_dest_file(), popt, rms)
+
     view_fitting_curve(
         f"{folderpath}/{filename_without_ext}_fit.jpg", x, y, fit_x, fit_y, r2, f_name
     )
